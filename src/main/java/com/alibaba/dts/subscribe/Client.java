@@ -280,6 +280,7 @@ public class Client {
     }
 
     public void asyncStart() {
+        this.isClosed = false;
         this.thread = new Thread(this::start);
         this.thread.start();
     }
