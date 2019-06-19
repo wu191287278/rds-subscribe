@@ -152,7 +152,9 @@ public class FileClientTest {
         }));
         Runtime.getRuntime().addShutdownHook(new Thread(client::close));
         client.start();
-
+        
+        //client.reload();//重新从数据库中加载配置
+        //client.reload(new Date());//从指定时间开始重新消费
     }
 
 }
@@ -160,6 +162,24 @@ public class FileClientTest {
 ```
 
 #### 保存消费偏移量到数据库中
+
+建表语句
+
+```
+CREATE TABLE `rds_subscribe_offset` (
+  `id` varchar(32) NOT NULL COMMENT '唯一id',
+  `brokers` varchar(128) DEFAULT NULL COMMENT '阿里云提供的消费地址',
+  `group_id` varchar(128) NOT NULL COMMENT '阿里云新建消费组的时候生成的id',
+  `topic` varchar(128) NOT NULL COMMENT '阿里云生成的topic',
+  `username` varchar(128) NOT NULL,
+  `password` varchar(128) NOT NULL,
+  `startTime` datetime DEFAULT NULL COMMENT '启动时从这个时间开始消费',
+  `offset` bigint(19) DEFAULT NULL COMMENT 'kafka消费偏移量, 该值仅仅是为了记录.',
+  `session_timeout_ms` int(5) DEFAULT '30000' COMMENT '会话超时时间',
+  `auto_commit_interval_ms` int(5) DEFAULT '30000' COMMENT '多久自动保存一次偏移量到数据库中',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+```
 
 ```
 package com.alibaba.dts.subscribe;
