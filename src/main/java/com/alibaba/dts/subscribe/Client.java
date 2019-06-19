@@ -40,7 +40,7 @@ public class Client {
 
     private KafkaConsumer<String, byte[]> consumer;
 
-    private Thread thread = new Thread(this::start);
+    private Thread thread;
 
     private long lastCommitTime = System.currentTimeMillis();
 
@@ -280,6 +280,7 @@ public class Client {
     }
 
     public void asyncStart() {
+        this.thread = new Thread(this::start);
         this.thread.start();
     }
 
