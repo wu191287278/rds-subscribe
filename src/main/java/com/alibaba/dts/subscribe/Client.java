@@ -127,7 +127,7 @@ public class Client {
     /**
      * 开始消费topic数据
      */
-    public synchronized void start() {
+    public void start() {
         String topic = this.rdsSubscribeProperties.getTopic();
         long startTime = this.rdsSubscribeProperties.getStartTimeMs() / 1000;
         log.info("begin consume:topic:" + topic + ",startTime:" + startTime);
@@ -279,14 +279,13 @@ public class Client {
         }
     }
 
-    public synchronized void asyncStart() {
-        if (!this.isClosed) return;
+    public void asyncStart() {
         this.isClosed = false;
         this.thread = new Thread(this::start);
         this.thread.start();
     }
 
-    public synchronized void close() {
+    public void close() {
         try {
             this.isClosed = true;
             if (consumer != null) {
@@ -321,15 +320,17 @@ public class Client {
      *
      * @param startTime 指定时间
      */
-    public synchronized void reload(Date startTime) {
+    public void reload(Date startTime) {
+        close();
         positioner.save(rdsSubscribeProperties.setStartTimeMs(startTime.getTime()));
-        reload();
+        init();
+        asyncStart();
     }
 
     /**
      * 重新加载配置文件
      */
-    public synchronized void reload() {
+    public void reload() {
         close();
         init();
         asyncStart();
