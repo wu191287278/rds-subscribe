@@ -153,7 +153,7 @@ public class FileClientTest {
         Runtime.getRuntime().addShutdownHook(new Thread(client::close));
         client.start();
         
-        //client.reload();//重新从数据库中加载配置
+        //client.reload();//重新从文件中加载配置
         //client.reload(new Date());//从指定时间开始重新消费
     }
 

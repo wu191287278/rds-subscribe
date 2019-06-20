@@ -68,9 +68,9 @@ public class Client {
         this.rdsSubscribeProperties = positioner.loadRdsSubscribeProperties();
     }
 
-    private static OffsetAndTimestamp fetchOffsetByTime(KafkaConsumer<String, byte[]> consumer,
-                                                        TopicPartition partition,
-                                                        Long startTime) {
+    private OffsetAndTimestamp fetchOffsetByTime(KafkaConsumer<String, byte[]> consumer,
+                                                 TopicPartition partition,
+                                                 Long startTime) {
         Map<TopicPartition, Long> query = new HashMap<>();
         query.put(partition, startTime);
 
@@ -127,7 +127,7 @@ public class Client {
     /**
      * 开始消费topic数据
      */
-    public void start() {
+    public synchronized void start() {
         String topic = this.rdsSubscribeProperties.getTopic();
         long startTime = this.rdsSubscribeProperties.getStartTimeMs() / 1000;
         log.info("begin consume:topic:" + topic + ",startTime:" + startTime);
@@ -279,13 +279,14 @@ public class Client {
         }
     }
 
-    public void asyncStart() {
+    public synchronized void asyncStart() {
+        if (!this.isClosed) return;
         this.isClosed = false;
         this.thread = new Thread(this::start);
         this.thread.start();
     }
 
-    public void close() {
+    public synchronized void close() {
         try {
             this.isClosed = true;
             if (consumer != null) {
@@ -320,17 +321,15 @@ public class Client {
      *
      * @param startTime 指定时间
      */
-    public void reload(Date startTime) {
-        close();
+    public synchronized void reload(Date startTime) {
         positioner.save(rdsSubscribeProperties.setStartTimeMs(startTime.getTime()));
-        init();
-        asyncStart();
+        reload();
     }
 
     /**
      * 重新加载配置文件
      */
-    public void reload() {
+    public synchronized void reload() {
         close();
         init();
         asyncStart();
