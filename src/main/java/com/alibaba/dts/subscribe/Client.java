@@ -321,10 +321,8 @@ public class Client {
      * @param startTime 指定时间
      */
     public void reload(Date startTime) {
-        close();
         positioner.save(rdsSubscribeProperties.setStartTimeMs(startTime.getTime()));
-        init();
-        asyncStart();
+        reload();
     }
 
     /**
