@@ -460,5 +460,8 @@ public class Client {
         column.setValue(value);
     }
 
+    public boolean isClosed() {
+        return this.isClosed;
+    }
 
 }
