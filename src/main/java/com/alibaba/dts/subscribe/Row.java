@@ -3,15 +3,11 @@ package com.alibaba.dts.subscribe;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 import java.util.List;
 
 
-@Data
-@Accessors(chain = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonFormat(shape = JsonFormat.Shape.NUMBER)
 public class Row implements Serializable {
@@ -61,6 +57,68 @@ public class Row implements Serializable {
     private String sql;
 
 
+    public String getDatabase() {
+        return database;
+    }
+
+    public Row setDatabase(String database) {
+        this.database = database;
+        return this;
+    }
+
+    public String getTable() {
+        return table;
+    }
+
+    public Row setTable(String table) {
+        this.table = table;
+        return this;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public Row setType(Type type) {
+        this.type = type;
+        return this;
+    }
+
+    public List<Column> getData() {
+        return data;
+    }
+
+    public Row setData(List<Column> data) {
+        this.data = data;
+        return this;
+    }
+
+    public List<Column> getOld() {
+        return old;
+    }
+
+    public void setOld(List<Column> old) {
+        this.old = old;
+    }
+
+    public List<Column> getPrimaryKeys() {
+        return primaryKeys;
+    }
+
+    public Row setPrimaryKeys(List<Column> primaryKeys) {
+        this.primaryKeys = primaryKeys;
+        return this;
+    }
+
+    public String getSql() {
+        return sql;
+    }
+
+    public Row setSql(String sql) {
+        this.sql = sql;
+        return this;
+    }
+
     /**
      * 类型
      */
@@ -68,7 +126,6 @@ public class Row implements Serializable {
         insert, delete, update, replace, ddl, unknown
     }
 
-    @Data
     public static class Column {
 
         /**
@@ -91,6 +148,41 @@ public class Row implements Serializable {
          */
         private boolean primaryKey;
 
+        public String getName() {
+            return name;
+        }
+
+        public Column setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public Column setValue(Object value) {
+            this.value = value;
+            return this;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public Column setType(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public boolean isPrimaryKey() {
+            return primaryKey;
+        }
+
+        public Column setPrimaryKey(boolean primaryKey) {
+            this.primaryKey = primaryKey;
+            return this;
+        }
     }
 
 

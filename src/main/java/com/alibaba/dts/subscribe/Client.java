@@ -52,14 +52,12 @@ public class Client {
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
 
-    public Client(Positioner positioner, List<Listener> listeners) {
-        this.positioner = positioner;
-        this.listeners = listeners;
-        init();
+    public Client(RdsSubscribeProperties rdsSubscribeProperties, List<Listener> listeners) {
+        this(new MemoryPositioner(rdsSubscribeProperties), listeners);
     }
 
-    public Client(RdsSubscribeProperties rdsSubscribeProperties, List<Listener> listeners) {
-        this.positioner = new MemoryPositioner(rdsSubscribeProperties);
+    public Client(Positioner positioner, List<Listener> listeners) {
+        this.positioner = positioner;
         this.listeners = listeners;
         init();
     }
@@ -148,100 +146,20 @@ public class Client {
                     Row row = null;
                     try {
                         GenericRecord payload = reader.read(null, decoder);
-                        Operation operation = ((Record) payload).getOperation();
-                        if (operation == Operation.INSERT || operation == Operation.DELETE || operation == Operation.UPDATE) {
-                            String[] objectName = ((Record) payload).getObjectName().toString().split("[.]");
-
-                            List<Field> fields = ((List<Field>) ((Record) payload).getFields());
-                            List<Row.Column> data = new ArrayList<>(fields.size());
-                            List<Row.Column> old = new ArrayList<>(fields.size());
-                            List<Row.Column> dataPrimaryKeys = new ArrayList<>();
-                            List<Row.Column> oldPrimaryKeys = new ArrayList<>();
-
-                            row = new Row()
-                                    .setDatabase(objectName[0])
-                                    .setTable(objectName[1])
-                                    .setType(Row.Type.valueOf(operation.name().toLowerCase()));
-
-                            for (Field field : fields) {
-                                Row.Column afterColumn = new Row.Column()
-                                        .setName(String.valueOf(field.getName()))
-                                        .setType(RdsSqlTypes.getType(field.getDataTypeNumber()).toLowerCase());
-                                data.add(afterColumn);
-                                Row.Column beforeColumn = new Row.Column()
-                                        .setName(String.valueOf(field.getName()))
-                                        .setType(RdsSqlTypes.getType(field.getDataTypeNumber()).toLowerCase());
-                                old.add(beforeColumn);
-                            }
-
-                            Map<CharSequence, CharSequence> tags = ((Record) payload).getTags();
-
-                            for (Map.Entry<CharSequence, CharSequence> entry : tags.entrySet()) {
-                                HashMap map = objectMapper.readValue(entry.getValue().toString(), HashMap.class);
-                                List<String> primaryKeys = (List<String>) map.get("PRIMARY");
-                                if (primaryKeys == null) break;
-                                for (String primaryKey : primaryKeys) {
-                                    for (Row.Column column : data) {
-                                        if (column.getName().equals(primaryKey)) {
-                                            column.setPrimaryKey(true);
-                                            dataPrimaryKeys.add(column);
-                                        } else {
-                                            column.setPrimaryKey(false);
-                                        }
-                                    }
-                                    for (Row.Column column : old) {
-                                        if (column.getName().equals(primaryKey)) {
-                                            column.setPrimaryKey(true);
-                                            oldPrimaryKeys.add(column);
-                                        } else {
-                                            column.setPrimaryKey(false);
-                                        }
-                                    }
-                                }
-                            }
-
-
-                            if (operation == Operation.INSERT || operation == Operation.UPDATE) {
-                                List<Object> afterImages = (List<Object>) ((Record) payload).getAfterImages();
-                                for (int i = 0; i < afterImages.size(); i++) {
-                                    Row.Column column = data.get(i);
-                                    Object value = afterImages.get(i);
-                                    setValue(column, value);
-                                }
-                                row.setData(data);
-                            }
-
-                            if (operation == Operation.DELETE || operation == Operation.UPDATE) {
-                                List<Object> beforeImages = (List<Object>) ((Record) payload).getBeforeImages();
-                                for (int i = 0; i < beforeImages.size(); i++) {
-                                    Row.Column column = old.get(i);
-                                    Object value = beforeImages.get(i);
-                                    setValue(column, value);
-                                }
-                                row.setOld(old);
-                            }
-
-                            if (operation != Operation.INSERT) {
-                                row.setPrimaryKeys(oldPrimaryKeys);
-                            } else {
-                                row.setPrimaryKeys(dataPrimaryKeys);
-                            }
-
-                            //将解析的数据进行消费处理
-                            for (Listener listener : listeners) {
-                                if (listener.match(row)) {
-                                    try {
-                                        listener.onNext(row);
-                                    } catch (Exception e) {
-                                        listener.onError(e);
-                                    }
+                        row = toRow(payload);
+                        if (row == null) continue;
+                        //将解析的数据进行消费处理
+                        for (Listener listener : listeners) {
+                            if (listener.match(row)) {
+                                try {
+                                    listener.onNext(row);
+                                } catch (Exception e) {
+                                    listener.onError(e);
                                 }
                             }
                         }
 
-                        this.rdsSubscribeProperties.setStartTimeMs(record.timestamp())
-                                .setOffset(offset);
-
+                        this.rdsSubscribeProperties.setStartTimeMs(record.timestamp()).setOffset(offset);
                     } catch (IOException ex) {
                         for (Listener listener : listeners) {
                             if (listener.match(row)) {
@@ -279,6 +197,90 @@ public class Client {
         }
     }
 
+    private Row toRow(GenericRecord payload) throws IOException {
+        String[] objectName = ((Record) payload).getObjectName().toString().split("[.]");
+        Operation operation = ((Record) payload).getOperation();
+
+        if (operation == Operation.INSERT || operation == Operation.DELETE || operation == Operation.UPDATE) {
+            List<Field> fields = ((List<Field>) ((Record) payload).getFields());
+            List<Row.Column> data = new ArrayList<>(fields.size());
+            List<Row.Column> old = new ArrayList<>(fields.size());
+            List<Row.Column> dataPrimaryKeys = new ArrayList<>();
+            List<Row.Column> oldPrimaryKeys = new ArrayList<>();
+
+            Row row = new Row()
+                    .setDatabase(objectName[0])
+                    .setTable(objectName[1])
+                    .setType(Row.Type.valueOf(operation.name().toLowerCase()));
+
+            for (Field field : fields) {
+                Row.Column afterColumn = new Row.Column()
+                        .setName(String.valueOf(field.getName()))
+                        .setType(RdsSqlTypes.getType(field.getDataTypeNumber()).toLowerCase());
+                data.add(afterColumn);
+                Row.Column beforeColumn = new Row.Column()
+                        .setName(String.valueOf(field.getName()))
+                        .setType(RdsSqlTypes.getType(field.getDataTypeNumber()).toLowerCase());
+                old.add(beforeColumn);
+            }
+
+            Map<CharSequence, CharSequence> tags = ((Record) payload).getTags();
+
+            for (Map.Entry<CharSequence, CharSequence> entry : tags.entrySet()) {
+                HashMap map = objectMapper.readValue(entry.getValue().toString(), HashMap.class);
+                List<String> primaryKeys = (List<String>) map.get("PRIMARY");
+                if (primaryKeys == null) break;
+                for (String primaryKey : primaryKeys) {
+                    for (Row.Column column : data) {
+                        if (column.getName().equals(primaryKey)) {
+                            column.setPrimaryKey(true);
+                            dataPrimaryKeys.add(column);
+                        } else {
+                            column.setPrimaryKey(false);
+                        }
+                    }
+                    for (Row.Column column : old) {
+                        if (column.getName().equals(primaryKey)) {
+                            column.setPrimaryKey(true);
+                            oldPrimaryKeys.add(column);
+                        } else {
+                            column.setPrimaryKey(false);
+                        }
+                    }
+                }
+            }
+
+
+            if (operation == Operation.INSERT || operation == Operation.UPDATE) {
+                List<Object> afterImages = (List<Object>) ((Record) payload).getAfterImages();
+                for (int i = 0; i < afterImages.size(); i++) {
+                    Row.Column column = data.get(i);
+                    Object value = afterImages.get(i);
+                    setValue(column, value);
+                }
+                row.setData(data);
+            }
+
+            if (operation == Operation.DELETE || operation == Operation.UPDATE) {
+                List<Object> beforeImages = (List<Object>) ((Record) payload).getBeforeImages();
+                for (int i = 0; i < beforeImages.size(); i++) {
+                    Row.Column column = old.get(i);
+                    Object value = beforeImages.get(i);
+                    setValue(column, value);
+                }
+                row.setOld(old);
+            }
+
+            if (operation != Operation.INSERT) {
+                row.setPrimaryKeys(oldPrimaryKeys);
+            } else {
+                row.setPrimaryKeys(dataPrimaryKeys);
+            }
+            return row;
+        }
+        return null;
+    }
+
     public void asyncStart() {
         if (!this.isClosed) {
             close();
@@ -289,8 +291,8 @@ public class Client {
     }
 
     public void close() {
+        if (isClosed || thread.isInterrupted()) throw new RuntimeException("This consumer has already been closed.");
         try {
-            this.isClosed = true;
             if (consumer != null) {
                 consumer.wakeup();
             }
@@ -311,6 +313,7 @@ public class Client {
                 log.warn(e.getMessage(), e);
             }
         }
+        this.isClosed = true;
     }
 
     private void commit() {
