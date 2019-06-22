@@ -198,15 +198,14 @@ public class Client {
     }
 
     private Row toRow(GenericRecord payload) throws IOException {
-        String[] objectName = ((Record) payload).getObjectName().toString().split("[.]");
         Operation operation = ((Record) payload).getOperation();
-
         if (operation == Operation.INSERT || operation == Operation.DELETE || operation == Operation.UPDATE) {
             List<Field> fields = ((List<Field>) ((Record) payload).getFields());
             List<Row.Column> data = new ArrayList<>(fields.size());
             List<Row.Column> old = new ArrayList<>(fields.size());
             List<Row.Column> dataPrimaryKeys = new ArrayList<>();
             List<Row.Column> oldPrimaryKeys = new ArrayList<>();
+            String[] objectName = ((Record) payload).getObjectName().toString().split("[.]");
 
             Row row = new Row()
                     .setDatabase(objectName[0])
