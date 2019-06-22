@@ -11,7 +11,6 @@
     <properties>
         <jdk.version>1.8</jdk.version>
         <kafka-clients.version>1.1.1</kafka-clients.version>
-        <!--<kafka-clients.version>2.0.0</kafka-clients.version>-->
     </properties>
 
     <dependencies>
@@ -41,11 +40,6 @@
             <version>2.9.9</version>
         </dependency>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.8</version>
-        </dependency>
-        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.47</version>
@@ -59,6 +53,7 @@
         </dependency>
 
     </dependencies>
+
     <build>
         <plugins>
             <!--compiler插件-->
