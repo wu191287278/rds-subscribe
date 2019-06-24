@@ -159,13 +159,13 @@ public class Client {
                             if (listener.match(row)) {
                                 try {
                                     listener.onNext(row);
+                                    this.rdsSubscribeProperties.setStartTimeMs(record.timestamp()).setOffset(offset);
                                 } catch (Exception e) {
                                     listener.onError(e);
                                 }
                             }
                         }
 
-                        this.rdsSubscribeProperties.setStartTimeMs(record.timestamp()).setOffset(offset);
                     } catch (IOException ex) {
                         for (Listener listener : listeners) {
                             if (listener.match(row)) {
