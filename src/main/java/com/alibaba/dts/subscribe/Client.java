@@ -61,12 +61,8 @@ public class Client {
     public Client(Positioner positioner, List<Listener> listeners) {
         this.positioner = positioner;
         this.listeners = listeners;
-        init();
     }
 
-    private void init() {
-        this.rdsSubscribeProperties = positioner.loadRdsSubscribeProperties();
-    }
 
     private OffsetAndTimestamp fetchOffsetByTime(KafkaConsumer<String, byte[]> consumer,
                                                  TopicPartition partition,
@@ -131,11 +127,12 @@ public class Client {
         if (!this.isClosed.get()) {
             throw new RuntimeException("This consumer has already been started.");
         }
+        RdsSubscribeProperties rdsSubscribeProperties = positioner.loadRdsSubscribeProperties();
         this.isClosed.set(false);
-        String topic = this.rdsSubscribeProperties.getTopic();
-        long startTime = this.rdsSubscribeProperties.getStartTimeMs() / 1000;
+        String topic = rdsSubscribeProperties.getTopic();
+        long startTime = rdsSubscribeProperties.getStartTimeMs() / 1000;
         log.info("begin consume:topic:" + topic + ",startTime:" + startTime);
-        this.consumer = new KafkaConsumer<>(buildProperties(this.rdsSubscribeProperties));
+        this.consumer = new KafkaConsumer<>(buildProperties(rdsSubscribeProperties));
         if (!assignOffsetToConsumer(consumer, topic, startTime)) {
             log.error("ose assignOffsetToConsumer error,need check");
             return;
@@ -331,7 +328,6 @@ public class Client {
     public void reload(Date startTime) {
         close();
         positioner.save(rdsSubscribeProperties.setStartTimeMs(startTime.getTime()));
-        init();
         asyncStart();
     }
 
@@ -340,7 +336,6 @@ public class Client {
      */
     public void reload() {
         close();
-        init();
         asyncStart();
     }
 
