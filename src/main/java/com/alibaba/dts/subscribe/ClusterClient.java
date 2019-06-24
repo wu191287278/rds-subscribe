@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -85,6 +86,27 @@ public class ClusterClient {
         }
         this.isClosed.set(true);
         this.waitCounter.countDown();
+    }
+
+
+    /**
+     * 从指定时间开始消费
+     *
+     * @param startTime 指定时间
+     */
+    public void reload(Date startTime) {
+        this.client.reload(startTime);
+    }
+
+    /**
+     * 重新加载配置文件
+     */
+    public void reload() {
+        this.client.reload();
+    }
+
+    public boolean isClosed() {
+        return isClosed.get();
     }
 
 
