@@ -61,6 +61,10 @@ public class Client {
     public Client(Positioner positioner, List<Listener> listeners) {
         this.positioner = positioner;
         this.listeners = listeners;
+        init();
+    }
+
+    private void init() {
         this.rdsSubscribeProperties = positioner.loadRdsSubscribeProperties();
     }
 
@@ -128,7 +132,7 @@ public class Client {
         if (!this.isClosed.get()) {
             throw new RuntimeException("This consumer has already been started.");
         }
-        RdsSubscribeProperties rdsSubscribeProperties = positioner.loadRdsSubscribeProperties();
+        this.rdsSubscribeProperties = positioner.loadRdsSubscribeProperties();
         this.isClosed.set(false);
         String topic = rdsSubscribeProperties.getTopic();
         long startTime = rdsSubscribeProperties.getStartTimeMs() / 1000;
@@ -471,7 +475,7 @@ public class Client {
     }
 
     String getId() {
-        return positioner.loadRdsSubscribeProperties().getGroupId();
+        return this.rdsSubscribeProperties.getGroupId();
     }
 
 }
