@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Client {
 
@@ -46,7 +47,8 @@ public class Client {
 
     private boolean isPolled = false;
 
-    private boolean isClosed = false;
+    private AtomicBoolean isClosed = new AtomicBoolean(true);
+
 
     private ObjectMapper objectMapper = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -126,18 +128,22 @@ public class Client {
      * 开始消费topic数据
      */
     public void start() {
+        if (!this.isClosed.get()) {
+            throw new RuntimeException("This consumer has already been started.");
+        }
+        this.isClosed.set(false);
         String topic = this.rdsSubscribeProperties.getTopic();
         long startTime = this.rdsSubscribeProperties.getStartTimeMs() / 1000;
         log.info("begin consume:topic:" + topic + ",startTime:" + startTime);
         this.consumer = new KafkaConsumer<>(buildProperties(this.rdsSubscribeProperties));
         if (!assignOffsetToConsumer(consumer, topic, startTime)) {
-            log.error("assignOffsetToConsumer error,need check");
+            log.error("ose assignOffsetToConsumer error,need check");
             return;
         }
 
         DatumReader<Record> reader = new SpecificDatumReader<>(Record.class);
         try {
-            while (!this.isClosed && !Thread.interrupted()) {
+            while (!this.isClosed.get() && !Thread.interrupted()) {
                 ConsumerRecords<String, byte[]> records = consumer.poll(1000);
                 for (ConsumerRecord<String, byte[]> record : records) {
                     long offset = record.offset();
@@ -191,7 +197,7 @@ public class Client {
                 }
             }
         } catch (WakeupException e) {
-            if (!isClosed) throw e;
+            if (!isClosed.get()) throw e;
         } finally {
             this.consumer.close();
         }
@@ -281,16 +287,13 @@ public class Client {
     }
 
     public void asyncStart() {
-        if (!this.isClosed) {
-            close();
-        }
-        this.isClosed = false;
         this.thread = new Thread(this::start);
         this.thread.start();
     }
 
     public void close() {
-        if (isClosed || thread.isInterrupted()) throw new RuntimeException("This consumer has already been closed.");
+        if (this.isClosed.get())
+            throw new RuntimeException("This consumer has already been closed.");
         try {
             if (consumer != null) {
                 consumer.wakeup();
@@ -312,7 +315,7 @@ public class Client {
                 log.warn(e.getMessage(), e);
             }
         }
-        this.isClosed = true;
+        this.isClosed.set(true);
     }
 
     private void commit() {
@@ -326,8 +329,10 @@ public class Client {
      * @param startTime 指定时间
      */
     public void reload(Date startTime) {
+        close();
         positioner.save(rdsSubscribeProperties.setStartTimeMs(startTime.getTime()));
-        reload();
+        init();
+        asyncStart();
     }
 
     /**
@@ -466,7 +471,11 @@ public class Client {
     }
 
     public boolean isClosed() {
-        return this.isClosed;
+        return this.isClosed.get();
+    }
+
+    String getId() {
+        return rdsSubscribeProperties.getGroupId();
     }
 
 }

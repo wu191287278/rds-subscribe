@@ -1,7 +1,6 @@
 package com.alibaba.dts.subscribe.positioner;
 
 import com.alibaba.dts.subscribe.RdsSubscribeProperties;
-import com.alibaba.dts.subscribe.positioner.Positioner;
 
 public class MemoryPositioner implements Positioner {
 
@@ -14,7 +13,6 @@ public class MemoryPositioner implements Positioner {
     @Override
     public void save(RdsSubscribeProperties properties) {
         this.rdsSubscribeProperties = properties;
-        System.err.println(this.rdsSubscribeProperties);
     }
 
     @Override
