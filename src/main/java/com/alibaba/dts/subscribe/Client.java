@@ -61,6 +61,7 @@ public class Client {
     public Client(Positioner positioner, List<Listener> listeners) {
         this.positioner = positioner;
         this.listeners = listeners;
+        this.rdsSubscribeProperties = positioner.loadRdsSubscribeProperties();
     }
 
 
@@ -470,7 +471,7 @@ public class Client {
     }
 
     String getId() {
-        return rdsSubscribeProperties.getGroupId();
+        return positioner.loadRdsSubscribeProperties().getGroupId();
     }
 
 }
