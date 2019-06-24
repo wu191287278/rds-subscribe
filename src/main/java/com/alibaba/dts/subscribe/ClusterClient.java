@@ -27,6 +27,8 @@ public class ClusterClient {
 
     private AtomicBoolean isClosed = new AtomicBoolean(true);
 
+    private AtomicBoolean isLeader = new AtomicBoolean(false);
+
     private CountDownLatch waitCounter = new CountDownLatch(1);
 
 
@@ -60,11 +62,13 @@ public class ClusterClient {
             @Override
             public void isLeader() {
                 client.asyncStart();
+                isLeader.set(true);
             }
 
             @Override
             public void notLeader() {
                 client.close();
+                isLeader.set(false);
             }
         });
 
@@ -95,6 +99,7 @@ public class ClusterClient {
      * @param startTime 指定时间
      */
     public void reload(Date startTime) {
+        checkIsLeader();
         this.client.reload(startTime);
     }
 
@@ -102,11 +107,18 @@ public class ClusterClient {
      * 重新加载配置文件
      */
     public void reload() {
+        checkIsLeader();
         this.client.reload();
     }
 
     public boolean isClosed() {
         return isClosed.get();
+    }
+
+    private void checkIsLeader() {
+        if (!isLeader.get()) {
+            throw new RuntimeException("This consumer is not leader");
+        }
     }
 
 
