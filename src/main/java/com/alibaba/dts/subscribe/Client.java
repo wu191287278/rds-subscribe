@@ -161,12 +161,13 @@ public class Client {
                             if (listener.match(row)) {
                                 try {
                                     listener.onNext(row);
-                                    this.rdsSubscribeProperties.setStartTimeMs(record.timestamp()).setOffset(offset);
                                 } catch (Exception e) {
                                     listener.onError(e);
                                 }
                             }
                         }
+
+                        this.rdsSubscribeProperties.setStartTimeMs(record.timestamp()).setOffset(offset);
 
                     } catch (IOException ex) {
                         for (Listener listener : listeners) {
@@ -370,6 +371,7 @@ public class Client {
         props.put("sasl.jaas.config", jaasCfg);
         props.put("enable.auto.commit", "false");
         props.put("group.id", groupId);
+//        props.put("consumer.id", groupId);
         return props;
     }
 
