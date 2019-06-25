@@ -217,7 +217,6 @@ public class JdbcClientTest {
 
 
 ```
-```
 
 #### 集群
 
@@ -268,7 +267,5 @@ public class ClusterClientTest {
     }
 
 }
-
-
 
 ```
