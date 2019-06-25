@@ -138,7 +138,8 @@ import java.util.Arrays;
  *   "startTimeMs" : 1560925348293,
  *   "offset" : 14540205,
  *   "sessionTimeoutMs" : 30000,
- *   "autoCommitIntervalMs" : 30000
+ *   "autoCommitIntervalMs" : 30000,
+ *   "pollTimeout" : 1000,
  * }
  */
 public class FileClientTest {
@@ -177,6 +178,7 @@ CREATE TABLE `rds_subscribe_offset` (
   `offset` bigint(19) DEFAULT NULL COMMENT 'kafka消费偏移量, 该值仅仅是为了记录.',
   `session_timeout_ms` int(5) DEFAULT '30000' COMMENT '会话超时时间',
   `auto_commit_interval_ms` int(5) DEFAULT '30000' COMMENT '多久自动保存一次偏移量到数据库中',
+  `poll_timeout` int(5) DEFAULT '1000',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 ```
