@@ -68,8 +68,7 @@
 |database | 数据库名称|
 |table | 表名称|
 |type | 事件 insert、update、delete,ddl|
-|database | 数据库名称
-|data | name:名称,type:类型,value:,isPrimaryKey:主键|
+|data | name:名称, type:类型, value:数据 ,isPrimaryKey:主键|
 |old | update、delete 更改前的旧值 格式同data一样|
 
 
