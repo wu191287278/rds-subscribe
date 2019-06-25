@@ -51,6 +51,10 @@ public class RdsSubscribeProperties {
      */
     private Integer autoCommitIntervalMs = 30000;
 
+    /**
+     * 批量拉取数据时间
+     */
+    private Integer pollTimeout = 1000;
 
     public String getBrokers() {
         return brokers;
@@ -130,6 +134,15 @@ public class RdsSubscribeProperties {
 
     public RdsSubscribeProperties setAutoCommitIntervalMs(Integer autoCommitIntervalMs) {
         this.autoCommitIntervalMs = autoCommitIntervalMs;
+        return this;
+    }
+
+    public Integer getPollTimeout() {
+        return pollTimeout;
+    }
+
+    public RdsSubscribeProperties setPollTimeout(Integer pollTimeout) {
+        this.pollTimeout = pollTimeout;
         return this;
     }
 }

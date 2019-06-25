@@ -146,7 +146,7 @@ public class Client {
         DatumReader<Record> reader = new SpecificDatumReader<>(Record.class);
         try {
             while (!this.isClosed.get() && !Thread.interrupted()) {
-                ConsumerRecords<String, byte[]> records = consumer.poll(1000);
+                ConsumerRecords<String, byte[]> records = consumer.poll(rdsSubscribeProperties.getPollTimeout());
                 for (ConsumerRecord<String, byte[]> record : records) {
                     long offset = record.offset();
                     int partition = record.partition(); //只有一个分区 0

@@ -23,16 +23,17 @@ public class JdbcPositioner implements Positioner {
             "  `offset` bigint(19) DEFAULT NULL," +
             "  `session_timeout_ms` int(5) DEFAULT '30000'," +
             "  `auto_commit_interval_ms` int(5) DEFAULT '30000'," +
+            "  `poll_timeout` int(5) DEFAULT '1000'," +
             "  PRIMARY KEY (`id`)" +
             ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
     private static final String REPLACE_SQL = "REPLACE INTO `" + TABLE_NAME + "`" +
-            "(`id`,`brokers`, `group_id`, `topic`, `username`, `password`, `startTime`, `offset`, `session_timeout_ms`, `auto_commit_interval_ms`) " +
+            "(`id`,`brokers`, `group_id`, `topic`, `username`, `password`, `startTime`, `offset`, `session_timeout_ms`, `auto_commit_interval_ms`,`poll_timeout`) " +
             "VALUES " +
-            "(?,?,?,?,?,?,?,?,?,?)";
+            "(?,?,?,?,?,?,?,?,?,?,?)";
 
     private static final String SELECT_SQL = "SELECT " +
-            "`id`, `brokers`, `group_id`, `topic`, `username`, `password`, `startTime`, `offset`, `session_timeout_ms`, `auto_commit_interval_ms`" +
+            "`id`, `brokers`, `group_id`, `topic`, `username`, `password`, `startTime`, `offset`, `session_timeout_ms`, `auto_commit_interval_ms`,`poll_timeout`" +
             "FROM `" + TABLE_NAME + "`" +
             "WHERE `id`=?";
 
@@ -63,6 +64,7 @@ public class JdbcPositioner implements Positioner {
             statement.setLong(8, properties.getOffset());
             statement.setInt(9, properties.getSessionTimeoutMs());
             statement.setInt(10, properties.getAutoCommitIntervalMs());
+            statement.setInt(11, properties.getPollTimeout());
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -86,6 +88,7 @@ public class JdbcPositioner implements Positioner {
                     Long offset = resultSet.getLong(8);
                     Integer sessionTimeoutMs = resultSet.getInt(9);
                     Integer autoCommitIntervalMs = resultSet.getInt(10);
+                    Integer pollTimeout = resultSet.getInt(11);
                     return new RdsSubscribeProperties()
                             .setGroupId(groupId)
                             .setTopic(topic)
@@ -95,13 +98,14 @@ public class JdbcPositioner implements Positioner {
                             .setOffset(offset)
                             .setBrokers(brokers)
                             .setSessionTimeoutMs(sessionTimeoutMs)
-                            .setAutoCommitIntervalMs(autoCommitIntervalMs);
+                            .setAutoCommitIntervalMs(autoCommitIntervalMs)
+                            .setPollTimeout(pollTimeout);
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        throw new RuntimeException("未在数据库中发现相关groupId");
+        throw new RuntimeException("未在数据库中发现相关记录");
     }
 
 
