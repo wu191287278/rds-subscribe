@@ -47,8 +47,9 @@ public abstract class AbstractTimeWindowListener extends AbstractListener {
         List<Row> oldRows = this.rows;
         if (oldRows.isEmpty()) return;
         this.rows = new ArrayList<>();
+        int size = oldRows.size();
         doNext(oldRows);
-        semaphore.release(oldRows.size());
+        semaphore.release(size);
     }
 
     @Override
