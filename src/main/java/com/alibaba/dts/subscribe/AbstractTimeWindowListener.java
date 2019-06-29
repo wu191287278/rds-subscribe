@@ -63,7 +63,7 @@ public abstract class AbstractTimeWindowListener extends AbstractListener {
         }
     }
 
-    public abstract void doNext(List<Row> rows);
+    protected abstract void doNext(List<Row> rows);
 
     @Override
     public void close() {
