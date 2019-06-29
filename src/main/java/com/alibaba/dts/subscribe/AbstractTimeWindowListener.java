@@ -45,6 +45,7 @@ public abstract class AbstractTimeWindowListener extends AbstractListener {
 
     private synchronized void copyOnWrite() {
         List<Row> oldRows = this.rows;
+        if (oldRows.isEmpty()) return;
         this.rows = new ArrayList<>();
         doNext(oldRows);
         semaphore.release(oldRows.size());
@@ -66,7 +67,9 @@ public abstract class AbstractTimeWindowListener extends AbstractListener {
 
     @Override
     public void close() {
-        scheduledExecutorService.shutdown();
-        doNext(this.rows);
+        if (!scheduledExecutorService.isShutdown()) {
+            scheduledExecutorService.shutdown();
+        }
+        copyOnWrite();
     }
 }
