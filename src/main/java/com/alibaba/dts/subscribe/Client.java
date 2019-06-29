@@ -133,7 +133,6 @@ public class Client {
             throw new RuntimeException("This consumer has already been started.");
         }
         this.rdsSubscribeProperties = positioner.loadRdsSubscribeProperties();
-        this.isClosed.set(false);
         String topic = rdsSubscribeProperties.getTopic();
         long startTime = rdsSubscribeProperties.getStartTimeMs() / 1000;
         log.info("begin consume:topic:" + topic + ",startTime:" + startTime);
@@ -144,6 +143,7 @@ public class Client {
         }
 
         DatumReader<Record> reader = new SpecificDatumReader<>(Record.class);
+        this.isClosed.set(false);
         try {
             while (!this.isClosed.get() && !Thread.interrupted()) {
                 ConsumerRecords<String, byte[]> records = consumer.poll(rdsSubscribeProperties.getPollTimeout());
