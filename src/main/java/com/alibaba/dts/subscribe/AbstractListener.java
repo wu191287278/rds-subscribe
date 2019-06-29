@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class AbstractListener implements Listener {
 
-    private static final Logger log = LoggerFactory.getLogger(Client.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractListener.class);
 
     @Override
     public abstract void onNext(Row row);
