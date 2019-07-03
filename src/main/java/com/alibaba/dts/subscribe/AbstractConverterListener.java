@@ -1,6 +1,5 @@
 package com.alibaba.dts.subscribe;
 
-import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -23,23 +22,19 @@ public abstract class AbstractConverterListener<T> extends AbstractListener {
     }
 
     @Override
-    public void onNext(Row row) {
-        try {
-            T data = null;
-            T old = null;
-            if (row.getType() == Row.Type.insert || row.getType() == Row.Type.update) {
-                data = getSerialization().parseObject(row.getData(), clazz);
-            }
-            if (row.getType() == Row.Type.update || row.getType() == Row.Type.delete) {
-                old = getSerialization().parseObject(row.getOld(), clazz);
-            }
-            doNext(row, data, old);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public void onNext(Row row) throws Exception {
+        T data = null;
+        T old = null;
+        if (row.getType() == Row.Type.insert || row.getType() == Row.Type.update) {
+            data = getSerialization().parseObject(row.getData(), clazz);
         }
+        if (row.getType() == Row.Type.update || row.getType() == Row.Type.delete) {
+            old = getSerialization().parseObject(row.getOld(), clazz);
+        }
+        doNext(row, data, old);
     }
 
-    public abstract void doNext(Row row, T data, T old);
+    public abstract void doNext(Row row, T data, T old) throws Exception;
 
 
     public Serialization getSerialization() {

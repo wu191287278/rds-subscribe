@@ -8,7 +8,7 @@ public abstract class AbstractListener implements Listener {
     private static final Logger log = LoggerFactory.getLogger(AbstractListener.class);
 
     @Override
-    public abstract void onNext(Row row);
+    public abstract void onNext(Row row) throws Exception;
 
 
     @Override
