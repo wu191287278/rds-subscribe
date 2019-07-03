@@ -3,6 +3,7 @@ package com.alibaba.dts.subscribe;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 
 public abstract class AbstractConverterListener<T> extends AbstractListener {
 
@@ -15,6 +16,8 @@ public abstract class AbstractConverterListener<T> extends AbstractListener {
             Type[] arguments = superGclass.getActualTypeArguments();
             if (arguments.length > 0) {
                 this.clazz = (Class<T>) arguments[0];
+            } else {
+                this.clazz = (Class<T>) HashMap.class;
             }
         }
     }
