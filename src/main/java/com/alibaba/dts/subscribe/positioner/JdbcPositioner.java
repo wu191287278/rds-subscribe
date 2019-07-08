@@ -12,41 +12,22 @@ public class JdbcPositioner implements Positioner {
 
     private static final String TABLE_NAME = "rds_subscribe_offset";
 
-    private static final String CREATE_TABLE_SQL = "CREATE TABLE `" + TABLE_NAME + "` (" +
-            "  `id` varchar(32) NOT NULL," +
-            "  `brokers` varchar(128) DEFAULT NULL," +
-            "  `group_id` varchar(128) NOT NULL," +
-            "  `topic` varchar(128) NOT NULL," +
-            "  `username` varchar(128) NOT NULL," +
-            "  `password` varchar(128) NOT NULL," +
-            "  `startTime` datetime DEFAULT NULL," +
-            "  `offset` bigint(19) DEFAULT NULL," +
-            "  `session_timeout_ms` int(5) DEFAULT '30000'," +
-            "  `auto_commit_interval_ms` int(5) DEFAULT '30000'," +
-            "  `poll_timeout` int(5) DEFAULT '1000'," +
-            "  PRIMARY KEY (`id`)" +
-            ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
-    private static final String REPLACE_SQL = "REPLACE INTO `" + TABLE_NAME + "`" +
-            "(`id`,`brokers`, `group_id`, `topic`, `username`, `password`, `startTime`, `offset`, `session_timeout_ms`, `auto_commit_interval_ms`,`poll_timeout`) " +
+    private static final String REPLACE_SQL = "REPLACE INTO " + TABLE_NAME + "" +
+            "(id,brokers, group_id, topic, username, password, startTime, offset, session_timeout_ms, auto_commit_interval_ms,poll_timeout) " +
             "VALUES " +
             "(?,?,?,?,?,?,?,?,?,?,?)";
 
     private static final String SELECT_SQL = "SELECT " +
-            "`id`, `brokers`, `group_id`, `topic`, `username`, `password`, `startTime`, `offset`, `session_timeout_ms`, `auto_commit_interval_ms`,`poll_timeout`" +
-            "FROM `" + TABLE_NAME + "`" +
-            "WHERE `id`=?";
+            "id, brokers, group_id, topic, username, password, startTime, offset, session_timeout_ms, auto_commit_interval_ms,poll_timeout" +
+            "FROM " + TABLE_NAME + "" +
+            "WHERE id=?";
 
     private String id;
 
     public JdbcPositioner(DataSource dataSource, String id) {
         this.dataSource = dataSource;
         this.id = id;
-        init();
-    }
-
-    private void init() {
-        createTable(TABLE_NAME);
     }
 
     @Override
@@ -108,17 +89,5 @@ public class JdbcPositioner implements Positioner {
         throw new RuntimeException("未在数据库中发现相关记录");
     }
 
-
-    public void createTable(String tableName) {
-        try (Connection connection = this.dataSource.getConnection();
-             ResultSet resultSet = connection.getMetaData().getTables(null, null, tableName, null)) {
-            if (resultSet.next()) return;
-            try (Statement statement = connection.createStatement();) {
-                statement.execute(CREATE_TABLE_SQL);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
 }
