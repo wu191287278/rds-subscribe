@@ -15,13 +15,13 @@ public class JdbcPositioner implements Positioner {
 
     private static final String REPLACE_SQL = "REPLACE INTO " + TABLE_NAME + "" +
             "(id,brokers, group_id, topic, username, password, startTime, offset, session_timeout_ms, auto_commit_interval_ms,poll_timeout) " +
-            "VALUES " +
+            " VALUES " +
             "(?,?,?,?,?,?,?,?,?,?,?)";
 
     private static final String SELECT_SQL = "SELECT " +
             "id, brokers, group_id, topic, username, password, startTime, offset, session_timeout_ms, auto_commit_interval_ms,poll_timeout" +
-            "FROM " + TABLE_NAME + "" +
-            "WHERE id=?";
+            " FROM " + TABLE_NAME  +
+            " WHERE id=?";
 
     private String id;
 
