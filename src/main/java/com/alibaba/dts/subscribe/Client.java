@@ -169,7 +169,7 @@ public class Client {
 
                         this.rdsSubscribeProperties.setStartTimeMs(record.timestamp()).setOffset(offset);
 
-                    } catch (IOException ex) {
+                    } catch (Exception ex) {
                         for (Listener listener : listeners) {
                             if (listener.match(row)) {
                                 listener.onError(ex);
@@ -201,6 +201,8 @@ public class Client {
             }
         } catch (WakeupException e) {
             if (!isClosed.get()) throw e;
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         } finally {
             this.consumer.close();
         }
