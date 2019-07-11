@@ -150,9 +150,9 @@ public class Client {
                 for (ConsumerRecord<String, byte[]> record : records) {
                     long offset = record.offset();
                     int partition = record.partition(); //只有一个分区 0
-                    Decoder decoder = DecoderFactory.get().binaryDecoder(record.value(), null);
                     Row row = null;
                     try {
+                        Decoder decoder = DecoderFactory.get().binaryDecoder(record.value(), null);
                         GenericRecord payload = reader.read(null, decoder);
                         row = toRow(payload);
                         if (row == null) continue;
