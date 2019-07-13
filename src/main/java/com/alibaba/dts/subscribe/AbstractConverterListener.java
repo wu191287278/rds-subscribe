@@ -3,6 +3,7 @@ package com.alibaba.dts.subscribe;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 
 public abstract class AbstractConverterListener<T> extends AbstractListener {
 
@@ -22,6 +23,12 @@ public abstract class AbstractConverterListener<T> extends AbstractListener {
     }
 
     @Override
+    public void onNext(List<Row> rows) throws Exception {
+        for (Row row : rows) {
+            onNext(row);
+        }
+    }
+
     public void onNext(Row row) throws Exception {
         T data = null;
         T old = null;

@@ -9,7 +9,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import java.util.Arrays;
 import java.util.List;
 
-public class ClusterClientTest {
+public class ClusterClientTest2 {
 
     public static void main(String[] args) throws InterruptedException {
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
@@ -37,7 +37,7 @@ public class ClusterClientTest {
             }
         }));
         ClusterClient clusterClient = new ClusterClient(client, curatorFramework);
-        Runtime.getRuntime().addShutdownHook(new Thread(()->{
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             clusterClient.close();
             curatorFramework.close();
         }));

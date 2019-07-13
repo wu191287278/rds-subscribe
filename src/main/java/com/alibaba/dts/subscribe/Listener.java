@@ -1,8 +1,10 @@
 package com.alibaba.dts.subscribe;
 
+import java.util.List;
+
 public interface Listener {
 
-    void onNext(Row row) throws Exception;
+    void onNext(List<Row> rows) throws Exception;
 
     void onError(Exception e);
 

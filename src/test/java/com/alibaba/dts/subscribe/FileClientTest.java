@@ -4,6 +4,7 @@ import com.alibaba.dts.subscribe.positioner.FilePosition;
 import com.alibaba.dts.subscribe.utils.SqlUtils;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * {
@@ -23,8 +24,10 @@ public class FileClientTest {
     public static void main(String[] args) {
         Client client = new Client(new FilePosition("./position.json"), Arrays.asList(new AbstractListener() {
             @Override
-            public void onNext(Row row) {
-                System.err.println(SqlUtils.toSql(row));
+            public void onNext(List<Row> rows) {
+                for (Row row : rows) {
+                    System.err.println(SqlUtils.toSql(row));
+                }
             }
         }));
         Runtime.getRuntime().addShutdownHook(new Thread(client::close));

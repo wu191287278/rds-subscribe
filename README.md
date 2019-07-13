@@ -106,8 +106,10 @@ public class MemoryClientTest {
                 .setStartTimeMs(System.currentTimeMillis());
         Client client = new Client(rdsSubscribeProperties, Arrays.asList(new AbstractListener() {
             @Override
-            public void onNext(Row row) {
-                System.err.println(SqlUtils.toSql(row));
+            public void onNext(List<Row> rows) {
+                for (Row row : rows) {
+                    System.err.println(SqlUtils.toSql(row));
+                }
             }
         }));
         Runtime.getRuntime().addShutdownHook(new Thread(client::close));
@@ -198,8 +200,10 @@ public class JdbcClientTest {
         Positioner positioner = new JdbcPositioner(dataSource(), "1");
         Client client = new Client(positioner, Arrays.asList(new AbstractListener() {
             @Override
-            public void onNext(Row row) {
-                System.err.println(SqlUtils.toSql(row));
+            public void onNext(List<Row> rows) {
+                for (Row row : rows) {
+                    System.err.println(SqlUtils.toSql(row));
+                }
             }
         }));
         Runtime.getRuntime().addShutdownHook(new Thread(client::close));
@@ -253,8 +257,10 @@ public class ClusterClientTest {
                 .setStartTimeMs(System.currentTimeMillis());
         Client client = new Client(rdsSubscribeProperties, Arrays.asList(new AbstractListener() {
             @Override
-            public void onNext(Row row) {
-                System.err.println(SqlUtils.toSql(row));
+            public void onNext(List<Row> rows) {
+                for (Row row : rows) {
+                    System.err.println(SqlUtils.toSql(row));
+                }
             }
         }));
         ClusterClient clusterClient = new ClusterClient(client, curatorFramework);

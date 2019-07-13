@@ -41,6 +41,8 @@ public class Client {
 
     private KafkaConsumer<String, byte[]> consumer;
 
+    private DatumReader<Record> reader = new SpecificDatumReader<>(Record.class);
+
     private Thread thread;
 
     private long lastCommitTime = System.currentTimeMillis();
@@ -142,48 +144,40 @@ public class Client {
             return;
         }
 
-        DatumReader<Record> reader = new SpecificDatumReader<>(Record.class);
         this.isClosed.set(false);
         try {
             while (!this.isClosed.get() && !Thread.interrupted()) {
                 ConsumerRecords<String, byte[]> records = consumer.poll(rdsSubscribeProperties.getPollTimeout());
+                Map<Listener, List<Row>> rowMap = new LinkedHashMap<>();
                 for (ConsumerRecord<String, byte[]> record : records) {
-                    long offset = record.offset();
-                    int partition = record.partition(); //只有一个分区 0
-                    Row row = null;
                     try {
-                        Decoder decoder = DecoderFactory.get().binaryDecoder(record.value(), null);
-                        GenericRecord payload = reader.read(null, decoder);
-                        row = toRow(payload);
+                        Row row = toRow(record);
                         if (row == null) continue;
                         //将解析的数据进行消费处理
                         for (Listener listener : listeners) {
+                            List<Row> rows = new ArrayList<>();
+                            rowMap.put(listener, rows);
                             if (listener.match(row)) {
                                 try {
-                                    listener.onNext(row);
+                                    rows.add(row);
                                 } catch (Exception e) {
                                     listener.onError(e);
                                 }
                             }
                         }
-
-                        this.rdsSubscribeProperties.setStartTimeMs(record.timestamp()).setOffset(offset);
-
                     } catch (Exception ex) {
-                        for (Listener listener : listeners) {
-                            if (listener.match(row)) {
-                                listener.onError(ex);
-                            }
-                        }
+                        log.error(ex.getMessage(), ex);
                     }
-
                 }
 
-                for (Listener listener : listeners) {
+                for (Map.Entry<Listener, List<Row>> entry : rowMap.entrySet()) {
+                    Listener key = entry.getKey();
+                    List<Row> value = entry.getValue();
+                    if (value.isEmpty()) continue;
                     try {
-                        listener.onFinish();
+                        key.onNext(value);
                     } catch (Exception e) {
-                        listener.onError(e);
+                        key.onError(e);
                     }
                 }
 
@@ -208,8 +202,12 @@ public class Client {
         }
     }
 
-    private Row toRow(GenericRecord payload) throws IOException {
+    private Row toRow(ConsumerRecord<String, byte[]> record) throws IOException {
+        Decoder decoder = DecoderFactory.get().binaryDecoder(record.value(), null);
+        GenericRecord payload = reader.read(null, decoder);
         Operation operation = ((Record) payload).getOperation();
+        long offset = record.offset();
+        int partition = record.partition(); //只有一个分区 0
         if (operation == Operation.INSERT || operation == Operation.DELETE || operation == Operation.UPDATE) {
             List<Field> fields = ((List<Field>) ((Record) payload).getFields());
             List<Row.Column> data = new ArrayList<>(fields.size());
@@ -286,6 +284,7 @@ public class Client {
             } else {
                 row.setPrimaryKeys(dataPrimaryKeys);
             }
+            this.rdsSubscribeProperties.setStartTimeMs(record.timestamp()).setOffset(offset);
             return row;
         }
         return null;

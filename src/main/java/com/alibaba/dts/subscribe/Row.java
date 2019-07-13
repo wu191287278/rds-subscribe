@@ -15,6 +15,8 @@ public class Row implements Serializable {
     private final static long serialVersionUID = 262362438424988816L;
 
 
+    private Long ts;
+
     /**
      * 数据库名称
      */
@@ -117,6 +119,15 @@ public class Row implements Serializable {
     public Row setSql(String sql) {
         this.sql = sql;
         return this;
+    }
+
+    public Long getTs() {
+        return ts;
+    }
+
+    public Long setTs(Long ts) {
+        this.ts = ts;
+        return ts;
     }
 
     /**
