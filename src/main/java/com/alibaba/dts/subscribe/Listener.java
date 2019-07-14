@@ -10,9 +10,6 @@ public interface Listener {
 
     boolean match(Row row);
 
-    void onFinish();
-
     void close();
-
 
 }

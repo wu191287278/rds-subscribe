@@ -12,15 +12,9 @@ public abstract class AbstractListener implements Listener {
     @Override
     public abstract void onNext(List<Row> rows) throws Exception;
 
-
     @Override
     public void onError(Exception e) {
         log.warn(e.getMessage(), e);
-    }
-
-    @Override
-    public void close() {
-
     }
 
     @Override
@@ -29,7 +23,7 @@ public abstract class AbstractListener implements Listener {
     }
 
     @Override
-    public void onFinish() {
+    public void close() {
 
     }
 }
