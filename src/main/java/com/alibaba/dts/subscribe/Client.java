@@ -306,6 +306,8 @@ public class Client {
             log.warn(e.getMessage(), e);
         }
 
+        this.isClosed.set(true);
+
         try {
             commit();
         } catch (Exception e) {
@@ -319,7 +321,6 @@ public class Client {
                 log.warn(e.getMessage(), e);
             }
         }
-        this.isClosed.set(true);
     }
 
     private void commit() {
