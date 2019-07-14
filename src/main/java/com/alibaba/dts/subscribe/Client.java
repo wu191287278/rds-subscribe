@@ -199,6 +199,21 @@ public class Client {
             log.error(e.getMessage(), e);
         } finally {
             this.consumer.close();
+
+            for (Listener listener : this.listeners) {
+                try {
+                    listener.close();
+                } catch (Exception e) {
+                    log.warn(e.getMessage(), e);
+                }
+            }
+
+            try {
+                commit();
+            } catch (Exception e) {
+                log.warn(e.getMessage(), e);
+            }
+
         }
     }
 
@@ -307,20 +322,6 @@ public class Client {
         }
 
         this.isClosed.set(true);
-
-        try {
-            commit();
-        } catch (Exception e) {
-            log.warn(e.getMessage(), e);
-        }
-
-        for (Listener listener : this.listeners) {
-            try {
-                listener.close();
-            } catch (Exception e) {
-                log.warn(e.getMessage(), e);
-            }
-        }
     }
 
     private void commit() {
