@@ -103,14 +103,6 @@ public class ClusterClient {
         this.client.reload(startTime);
     }
 
-    /**
-     * 重新加载配置文件
-     */
-    public void reload() {
-        checkIsLeader();
-        this.client.reload();
-    }
-
     public boolean isClosed() {
         return isClosed.get();
     }

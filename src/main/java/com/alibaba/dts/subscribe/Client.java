@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Client {
 
@@ -43,9 +44,9 @@ public class Client {
 
     private DatumReader<Record> reader = new SpecificDatumReader<>(Record.class);
 
-    private Thread thread;
-
     private long lastCommitTime = System.currentTimeMillis();
+
+    private AtomicLong reloadTime = new AtomicLong(0);
 
     private boolean isPolled = false;
 
@@ -147,6 +148,15 @@ public class Client {
         this.isClosed.set(false);
         try {
             while (!this.isClosed.get() && !Thread.interrupted()) {
+                if (reloadTime.get() != 0) {
+                    startTime = reloadTime.get() / 1000;
+                    if (!assignOffsetToConsumer(consumer, rdsSubscribeProperties.getTopic(), startTime)) {
+                        log.error("ose assignOffsetToConsumer error,need check");
+                        break;
+                    }
+                    rdsSubscribeProperties.setStartTimeMs(reloadTime.get());
+                    reloadTime.set(0);
+                }
                 ConsumerRecords<String, byte[]> records = consumer.poll(rdsSubscribeProperties.getPollTimeout());
                 Map<Listener, List<Row>> rowMap = new LinkedHashMap<>();
                 for (ConsumerRecord<String, byte[]> record : records) {
@@ -306,8 +316,7 @@ public class Client {
     }
 
     public void asyncStart() {
-        this.thread = new Thread(this::start);
-        this.thread.start();
+        new Thread(this::start).start();
     }
 
     public void close() {
@@ -335,17 +344,7 @@ public class Client {
      * @param startTime 指定时间
      */
     public void reload(Date startTime) {
-        close();
-        positioner.save(rdsSubscribeProperties.setStartTimeMs(startTime.getTime()));
-        asyncStart();
-    }
-
-    /**
-     * 重新加载配置文件
-     */
-    public void reload() {
-        close();
-        asyncStart();
+        reloadTime.set(startTime.getTime());
     }
 
     private Properties buildProperties(RdsSubscribeProperties rdsSubscribeProperties) {
