@@ -65,7 +65,7 @@ public class Client {
 
     public Client(Positioner positioner, List<Listener> listeners) {
         this.positioner = positioner;
-        this.listeners = listeners;
+        this.listeners = new ArrayList<>(listeners);
         init();
     }
 
@@ -167,8 +167,7 @@ public class Client {
                         if (row == null) continue;
                         //将解析的数据进行消费处理
                         for (Listener listener : listeners) {
-                            List<Row> rows = new ArrayList<>();
-                            rowMap.put(listener, rows);
+                            List<Row> rows = rowMap.computeIfAbsent(listener, k -> new ArrayList<>());
                             if (listener.match(row)) {
                                 try {
                                     rows.add(row);
