@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,6 +53,7 @@ public class Client {
 
     private AtomicBoolean isClosed = new AtomicBoolean(true);
 
+    private ZoneOffset zoneOffset = OffsetDateTime.now().getOffset();
 
     private ObjectMapper objectMapper = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -424,7 +426,7 @@ public class Client {
             java.lang.Integer second = dateTime.getSecond() != null ? dateTime.getSecond() : 0;
             java.lang.Integer millis = dateTime.getMillis() != null ? dateTime.getMillis() : 0;
             LocalDateTime localDateTime = LocalDateTime.of(year, month, day, hour, minute, second, millis);
-            value = localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+            value = localDateTime.toInstant(zoneOffset).toEpochMilli();
         }
 
         if (o instanceof Timestamp) {
@@ -443,7 +445,7 @@ public class Client {
             java.lang.Integer second = dateTime.getSecond() != null ? dateTime.getSecond() : 0;
             java.lang.Integer millis = dateTime.getMillis() != null ? dateTime.getMillis() : 0;
             LocalDateTime localDateTime = LocalDateTime.of(year, month, day, hour, minute, second, millis);
-            value = localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
+            value = localDateTime.toInstant(zoneOffset).toEpochMilli();
         }
 
         if (o instanceof TextObject) {
