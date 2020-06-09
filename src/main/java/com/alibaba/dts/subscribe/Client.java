@@ -30,6 +30,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 public class Client {
 
@@ -57,6 +58,8 @@ public class Client {
 
     private ObjectMapper objectMapper = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
 
     public Client(RdsSubscribeProperties rdsSubscribeProperties, List<Listener> listeners) {
@@ -261,9 +264,16 @@ public class Client {
             Map<CharSequence, CharSequence> tags = ((Record) payload).getTags();
 
             for (Map.Entry<CharSequence, CharSequence> entry : tags.entrySet()) {
-                HashMap map = objectMapper.readValue(entry.getValue().toString(), HashMap.class);
-                List<String> primaryKeys = (List<String>) map.get("PRIMARY");
-                if (primaryKeys == null) break;
+                String value = entry.getValue().toString();
+                List<String> primaryKeys = new ArrayList<>();
+                CharSequence key = entry.getKey();
+                if (NUMBER_PATTERN.matcher(value).find()) {
+                    primaryKeys.add(key.toString());
+                } else {
+                    HashMap map = objectMapper.readValue(value, HashMap.class);
+                    List<String> ps = (List<String>) map.get("PRIMARY");
+                    primaryKeys.addAll(ps);
+                }
                 for (String primaryKey : primaryKeys) {
                     for (Row.Column column : data) {
                         if (column.getName().equals(primaryKey)) {
